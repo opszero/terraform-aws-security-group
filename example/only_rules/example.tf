@@ -1,0 +1,61 @@
+provider "aws" {
+  region = "eu-west-1"
+}
+
+##-----------------------------------------------------------------------------
+## VPC Module Call.
+##-----------------------------------------------------------------------------
+module "vpc" {
+  source     = "git@github.com:opszero/terraform-aws-vpc?ref=v1.0.1"
+  name       = "test"
+  cidr_block = "10.0.0.0/16"
+}
+
+##-----------------------------------------------------------------------------
+## Security Group Rules Module Call.
+##-----------------------------------------------------------------------------
+module "security_group_rules" {
+  source         = "./../../"
+  name           = "app"
+  vpc_id         = module.vpc.vpc_id
+  new_sg         = false
+  existing_sg_id = "sg-0092e77f40ba8e3ee"
+
+  ## INGRESS Rules
+  existing_sg_ingress_rules_with_cidr_blocks = [{
+    rule_count  = 1
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["10.9.0.0/16"]
+    description = "Allow ssh traffic."
+    },
+    {
+      rule_count  = 2
+      from_port   = 27017
+      to_port     = 27017
+      protocol    = "tcp"
+      cidr_blocks = ["10.9.0.0/16"]
+      description = "Allow Mongodb traffic."
+    }
+  ]
+
+  ## EGRESS Rules
+  existing_sg_egress_rules_with_cidr_blocks = [{
+    rule_count  = 1
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["10.9.0.0/16"]
+    description = "Allow ssh outbound traffic."
+    },
+    {
+      rule_count  = 2
+      from_port   = 27017
+      to_port     = 27017
+      protocol    = "tcp"
+      cidr_blocks = ["10.9.0.0/16"]
+      description = "Allow Mongodb outbound traffic."
+  }]
+
+}
